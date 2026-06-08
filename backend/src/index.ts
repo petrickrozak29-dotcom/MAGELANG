@@ -19,6 +19,7 @@ app.use('/api/culture', cultureRouter);
 app.use('/api/events', eventRouter);
 app.use('/api/articles', articlesRouter);
 app.use('/api/ai', aiRouter);
+app.use('/api/users', usersRouter);
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', service: 'MAGELANGVERSE-ID backend' }));
 
@@ -33,7 +34,8 @@ app.get('/', (_req, res) => {
       '/api/culture',
       '/api/events',
       '/api/articles',
-      '/api/ai'
+      '/api/ai',
+      '/api/users'
     ]
   });
 });

@@ -20,10 +20,11 @@ export default function AdminPage() {
     description: ''
   });
   const [status, setStatus] = useState('');
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://keen-warmth-production-2f2b.up.railway.app';
 
   const fetchEvents = async () => {
     try {
-      const response = await fetch('http://localhost:4000/api/events');
+      const response = await fetch(`${API_BASE_URL}/api/events`);
       const data = await response.json();
       setEvents(data);
     } catch (error) {
@@ -45,7 +46,7 @@ export default function AdminPage() {
     };
 
     try {
-      const response = await fetch('http://localhost:4000/api/events', {
+      const response = await fetch(`${API_BASE_URL}/api/events`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

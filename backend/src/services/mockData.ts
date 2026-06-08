@@ -97,14 +97,98 @@ export const articlesData = [
   }
 ];
 
-export const aiAssistant = (timeAvailable: string | number) => {
-  return {
-    itinerary: [
-      { time: '08:00', activity: 'Candi Borobudur' },
-      { time: '11:00', activity: 'Punthuk Setumbu' },
-      { time: '13:00', activity: 'Makan Getuk Trio' },
-      { time: '15:00', activity: 'Nepal Van Java' }
-    ],
-    note: `Rekomendasi perjalanan untuk ${timeAvailable} jam di Magelang dengan kombinasi heritage dan kuliner.`
-  };
+export const usersData = [
+  {
+    id: 1,
+    name: 'Guest User',
+    email: 'guest@example.com',
+    latitude: -7.6079,
+    longitude: 110.2038,
+    savedAt: new Date().toISOString()
+  }
+];
+
+interface AIRequest {
+  timeAvailable: number;
+  latitude?: number;
+  longitude?: number;
+}
+
+const toKilometers = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+  const toRad = (value: number) => (value * Math.PI) / 180;
+  const earthRadius = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return earthRadius * c;
+};
+
+const createRoute = (timeAvailable: number, baseLat: number, baseLng: number) => {
+  const sortedTourism = tourismData
+    .map((item) => ({ ...item, distance: toKilometers(baseLat, baseLng, item.latitude, item.longitude) }))
+    .sort((a, b) => a.distance - b.distance);
+
+  const sortedCulinary = culinaryData
+    .map((item) => ({ ...item, distance: toKilometers(baseLat, baseLng, item.latitude, item.longitude) }))
+    .sort((a, b) => a.distance - b.distance);
+
+  const nearestTour = sortedTourism.slice(0, 3);
+  const nearestCulinary = sortedCulinary.slice(0, 2);
+
+  const itinerary = [] as Array<{ time: string; activity: string }>;
+  const baseNote = `Berdasarkan lokasi Anda di sekitar (${baseLat.toFixed(4)}, ${baseLng.toFixed(4)}), perjalanan disusun agar tidak terlalu jauh dan tetap masuk akal.`;
+
+  if (timeAvailable <= 4) {
+    itinerary.push(
+      { time: '08:00', activity: `Mulai dari lokasi Anda dan menuju ${nearestTour[0].name}` },
+      { time: '10:30', activity: `Eksplorasi singkat ${nearestTour[0].name}` },
+      { time: '12:00', activity: `Makan siang di ${nearestCulinary[0].name}` },
+      { time: '13:30', activity: 'Kembali beristirahat atau menikmati suasana lokal' }
+    );
+    return { itinerary, note: baseNote };
+  }
+
+  if (timeAvailable <= 8) {
+    itinerary.push(
+      { time: '07:30', activity: `Berangkat dari lokasi Anda ke ${nearestTour[0].name}` },
+      { time: '09:30', activity: `Menikmati ${nearestTour[0].name}` },
+      { time: '12:00', activity: `Makan siang di ${nearestCulinary[0].name}` },
+      { time: '14:00', activity: `Kunjungi ${nearestTour[1].name}` },
+      { time: '16:30', activity: 'Kembali ke pusat kota atau tempat bermalam' }
+    );
+    return { itinerary, note: baseNote };
+  }
+
+  if (timeAvailable <= 12) {
+    itinerary.push(
+      { time: '06:30', activity: `Dari lokasi Anda ke ${nearestTour[0].name}` },
+      { time: '09:00', activity: `Eksplorasi lengkap ${nearestTour[0].name}` },
+      { time: '12:00', activity: `Makan siang di ${nearestCulinary[0].name}` },
+      { time: '14:00', activity: `Lanjut ke ${nearestTour[1].name}` },
+      { time: '16:30', activity: `Istirahat sore di panggung lokal atau café` },
+      { time: '18:30', activity: `Makan malam di ${nearestCulinary[1].name}` }
+    );
+    return { itinerary, note: baseNote };
+  }
+
+  itinerary.push(
+    { time: '06:00', activity: `Sunrise di ${nearestTour[0].name}` },
+    { time: '08:30', activity: `Sarapan pagi di ${nearestCulinary[0].name}` },
+    { time: '10:30', activity: `Kunjungi ${nearestTour[1].name}` },
+    { time: '13:00', activity: `Makan siang khas Magelang di ${nearestCulinary[1].name}` },
+    { time: '15:30', activity: `Wisata santai di taman lokal atau destinasi dekat Anda` },
+    { time: '18:00', activity: 'Makan malam dan bersiap kembali ke penginapan' }
+  );
+
+  return { itinerary, note: baseNote };
+};
+
+export const aiAssistant = ({ timeAvailable, latitude, longitude }: AIRequest) => {
+  const baseLat = latitude ?? -7.6079;
+  const baseLng = longitude ?? 110.2038;
+  return createRoute(timeAvailable, baseLat, baseLng);
 };
